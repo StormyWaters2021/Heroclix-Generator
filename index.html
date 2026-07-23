@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Create and print custom 1.5-inch HeroClix-style tokens.">
+  <title>Heroclix Generator</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Heroclix Bystander Generator</h1>
+    </div>
+    <div class="header-actions">
+      <button id="new-project-button" class="button button--quiet" type="button">New</button>
+      <button id="save-project-button" class="button button--quiet" type="button">Save project</button>
+      <label class="button button--quiet file-button" for="load-project-input">Open project</label>
+      <input id="load-project-input" class="visually-hidden" type="file" accept="application/json,.json">
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <span class="theme-icon theme-icon--day" aria-hidden="true">☀</span>
+        <span class="theme-icon theme-icon--night" aria-hidden="true">☾</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="panel editor-panel" aria-labelledby="editor-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Editor</p>
+          <h2 id="editor-heading">Token details</h2>
+        </div>
+        <button id="reset-token-button" class="button button--quiet" type="button">Reset token</button>
+      </div>
+
+      <div class="form-grid">
+        <label class="field field--wide">
+          <span>Name</span>
+          <input id="name-input" type="text" maxlength="40" autocomplete="off" placeholder="Character name">
+        </label>
+
+        <label class="field">
+          <span>Token template</span>
+          <select id="template-select"></select>
+        </label>
+
+        <label class="field">
+          <span>Range</span>
+          <input id="range-input" type="number" min="0" max="99" value="6">
+        </label>
+
+        <label class="field">
+          <span>Bolts</span>
+          <input id="bolts-input" type="number" min="0" max="6" value="1">
+        </label>
+      </div>
+
+      <fieldset class="fieldset">
+        <legend>Artwork</legend>
+        <div class="artwork-controls">
+          <label class="button button--primary file-button" for="artwork-input">Upload artwork</label>
+          <input id="artwork-input" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp">
+          <button id="reset-artwork-button" class="button button--quiet" type="button">Reset position</button>
+        </div>
+        <div class="slider-grid">
+          <label class="field">
+            <span>Zoom <output id="zoom-output">100%</output></span>
+            <input id="zoom-input" type="range" min="25" max="400" value="100">
+          </label>
+          <label class="field">
+            <span>Rotation <output id="rotation-output">0°</output></span>
+            <input id="rotation-input" type="range" min="-180" max="180" value="0">
+          </label>
+        </div>
+        <p class="help-text">Drag directly on the preview to reposition the artwork.</p>
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend>Stats</legend>
+        <div id="stat-controls" class="stat-controls"></div>
+      </fieldset>
+
+      <div class="editor-actions">
+        <button id="add-to-queue-button" class="button button--primary" type="button">Add token to print list</button>
+        <button id="export-png-button" class="button" type="button">Export current PNG</button>
+      </div>
+    </section>
+
+    <section class="preview-column" aria-labelledby="preview-heading">
+      <div class="panel preview-panel">
+        <div class="section-heading">
+          <div>
+          </div>
+        </div>
+        <div class="canvas-stage">
+          <canvas id="token-canvas" width="1254" height="1254" aria-label="Token preview"></canvas>
+          <p id="canvas-loading" class="canvas-message">Loading template…</p>
+        </div>
+      </div>
+
+      <section class="panel queue-panel" aria-labelledby="queue-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Print list</p>
+            <h2 id="queue-heading">Saved tokens</h2>
+          </div>
+          <span id="queue-count" class="size-badge">0 copies</span>
+        </div>
+        <div id="queue-empty" class="empty-state">No tokens have been added yet.</div>
+        <div id="queue-list" class="queue-list"></div>
+      </section>
+
+      <section class="panel export-panel" aria-labelledby="export-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PDF output</p>
+            <h2 id="export-heading">Print layout</h2>
+          </div>
+        </div>
+        <div class="option-stack">
+          <label class="radio-card">
+            <input type="radio" name="print-mode" value="max" checked>
+            <span><strong>Max tokens per page</strong><small>30 with cutting gaps; 35 when tightly packed.</small></span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="print-mode" value="avery8293">
+            <span><strong>Avery 8293</strong><small>Exact 4 × 5 positions for 1.5-inch round labels.</small></span>
+          </label>
+          <label class="check-row">
+            <input id="bleed-input" type="checkbox">
+            <span>Include ¼-inch black bleed</span>
+          </label>
+          <label id="tight-pack-row" class="check-row">
+            <input id="tight-pack-input" type="checkbox">
+            <span>Pack without cutting gaps (35 per page)</span>
+          </label>
+        </div>
+        <p id="page-summary" class="help-text">30 tokens per page.</p>
+        <button id="export-pdf-button" class="button button--primary button--wide" type="button">Export PDF</button>
+        <p class="print-note">Print the PDF at Actual Size or 100%. Do not use Fit, Shrink, or Scale to Page.</p>
+      </section>
+    </section>
+  </main>
+
+  <template id="stat-row-template">
+    <div class="stat-row">
+      <span class="stat-label"></span>
+      <label class="field field--compact">
+        <span class="visually-hidden">Icon</span>
+        <select class="stat-icon-select"></select>
+      </label>
+      <label class="field field--compact">
+        <span class="visually-hidden">Value</span>
+        <input class="stat-value-input" type="number" min="0" max="99">
+      </label>
+      <label class="field field--compact field--ability">
+        <span class="visually-hidden">Ability color</span>
+        <select class="stat-ability-select"></select>
+      </label>
+    </div>
+  </template>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
