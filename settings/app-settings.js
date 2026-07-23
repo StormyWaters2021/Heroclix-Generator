@@ -1,8 +1,8 @@
 export const APP_SETTINGS = {
-  projectVersion: 1,
+  projectVersion: 2,
   versionmsg: {
 	  visible: true,
-	  text: "HeroClix Bystander Generator v0.1.1"
+	  text: "HeroClix Bystander Generator v0.2.0"
 	},
   storageKey: "custom-token-maker-project-v1",
   themeStorageKey: "custom-token-maker-theme",
@@ -35,9 +35,19 @@ export const APP_SETTINGS = {
   templates: [
     {
       id: "classic",
-      label: "Classic blank token",
+      label: "Default",
       image: "assets/templates/classic-token.png",
-      layoutId: "classic"
+      bleedImage: "assets/templates/classic-token-bleed.png",
+      layoutId: "classic",
+      shape: "circle"
+    },
+	{
+      id: "art-only",
+      label: "Art Only",
+      image: "assets/templates/art-only-token.png",
+      bleedImage: "assets/templates/art-only-token-bleed.png",
+      layoutId: "art-only",
+      shape: "circle"
     }
   ]
 };

@@ -88,7 +88,6 @@ async function drawConfiguredIcon(ctx, iconDefinition, position) {
 
   const image = await loadImage(iconDefinition.image);
   const scale = Number(iconDefinition.scale) || 1;
-
   const dimensions = containSize(
     image,
     position.width * scale,
@@ -98,7 +97,6 @@ async function drawConfiguredIcon(ctx, iconDefinition, position) {
   ctx.save();
   ctx.translate(position.x, position.y);
   ctx.rotate(((Number(position.rotation) || 0) * Math.PI) / 180);
-
   ctx.drawImage(
     image,
     -dimensions.width / 2,
@@ -106,37 +104,95 @@ async function drawConfiguredIcon(ctx, iconDefinition, position) {
     dimensions.width,
     dimensions.height
   );
-
   ctx.restore();
 }
 
-export async function renderToken(canvas, token, { includeTransparentBackground = true } = {}) {
-  const size = APP_SETTINGS.canvasSize;
-  if (canvas.width !== size) canvas.width = size;
-  if (canvas.height !== size) canvas.height = size;
+function createShapePath(ctx, shape, centerX, centerY, width, height = width) {
+  ctx.beginPath();
 
-  const ctx = canvas.getContext("2d", { alpha: true });
-  ctx.clearRect(0, 0, size, size);
-  if (!includeTransparentBackground) {
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, size, size);
+  if (shape === "square") {
+    ctx.rect(centerX - width / 2, centerY - height / 2, width, height);
+    return;
   }
 
-  const template = APP_SETTINGS.templates.find((entry) => entry.id === token.templateId) || APP_SETTINGS.templates[0];
+  ctx.arc(centerX, centerY, Math.min(width, height) / 2, 0, Math.PI * 2);
+}
+
+function resolveTemplate(token) {
+  return APP_SETTINGS.templates.find((entry) => entry.id === token.templateId)
+    || APP_SETTINGS.templates[0];
+}
+
+export function getTokenShape(token) {
+  const template = resolveTemplate(token);
   const layout = TOKEN_LAYOUTS[template.layoutId];
+  return template.shape || layout?.shape || "circle";
+}
+
+export async function renderToken(
+  canvas,
+  token,
+  {
+    includeTransparentBackground = true,
+    bleedScale = 1,
+    showCutLine = false
+  } = {}
+) {
+  const normalSize = APP_SETTINGS.canvasSize;
+  const outputSize = Math.round(normalSize * Math.max(1, Number(bleedScale) || 1));
+  const offset = (outputSize - normalSize) / 2;
+
+  if (canvas.width !== outputSize) canvas.width = outputSize;
+  if (canvas.height !== outputSize) canvas.height = outputSize;
+
+  const ctx = canvas.getContext("2d", { alpha: true });
+  ctx.clearRect(0, 0, outputSize, outputSize);
+
+  if (!includeTransparentBackground) {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, outputSize, outputSize);
+  }
+
+  const template = resolveTemplate(token);
+  const layout = TOKEN_LAYOUTS[template.layoutId];
+  if (!layout) throw new Error(`Missing token layout: ${template.layoutId}`);
+
+  const tokenShape = template.shape || layout.shape || "circle";
+  const clipInset = Math.max(0, Number(layout.artwork?.clipInset) || 0);
+
+  // Clip the complete output to its configured physical shape.
+  ctx.save();
+  createShapePath(
+    ctx,
+    tokenShape,
+    outputSize / 2,
+    outputSize / 2,
+    outputSize,
+    outputSize
+  );
+  ctx.clip();
 
   if (token.artwork.dataUrl) {
     const artwork = await loadImage(token.artwork.dataUrl);
+
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(layout.artwork.clipCenterX, layout.artwork.clipCenterY, layout.artwork.clipRadius, 0, Math.PI * 2);
+    createShapePath(
+      ctx,
+      tokenShape,
+      outputSize / 2,
+      outputSize / 2,
+      outputSize - clipInset * 2,
+      outputSize - clipInset * 2
+    );
     ctx.clip();
+
     ctx.translate(
-      layout.artwork.centerX + token.artwork.x,
-      layout.artwork.centerY + token.artwork.y
+      offset + layout.artwork.centerX + token.artwork.x,
+      offset + layout.artwork.centerY + token.artwork.y
     );
     ctx.rotate((token.artwork.rotation * Math.PI) / 180);
-    const baseScale = Math.max(size / artwork.width, size / artwork.height);
+
+    const baseScale = Math.max(normalSize / artwork.width, normalSize / artwork.height);
     const scale = baseScale * token.artwork.zoom * layout.artwork.defaultScale;
     ctx.drawImage(
       artwork,
@@ -148,11 +204,32 @@ export async function renderToken(canvas, token, { includeTransparentBackground 
     ctx.restore();
   }
 
-  const templateImage = await loadImage(template.image);
-  ctx.drawImage(templateImage, 0, 0, size, size);
+  // A bleed image is optional. Without one, the normal template is centered
+  // and the uploaded artwork can still occupy the bleed area.
+  const templateSource = bleedScale > 1 && template.bleedImage
+    ? template.bleedImage
+    : template.image;
+  const templateImage = await loadImage(templateSource);
+
+  if (bleedScale > 1 && template.bleedImage) {
+    ctx.drawImage(templateImage, 0, 0, outputSize, outputSize);
+  } else {
+    ctx.drawImage(templateImage, offset, offset, normalSize, normalSize);
+  }
+
+  // All layout coordinates remain based on the normal canvas and are simply
+  // centered within the larger bleed canvas.
+  ctx.save();
+  ctx.translate(offset, offset);
 
   if (token.name.trim()) {
-    drawOutlinedText(ctx, token.name.trim().toUpperCase(), layout.name, APP_SETTINGS.fonts.name, layout.name.maxWidth);
+    drawOutlinedText(
+      ctx,
+      token.name.trim().toUpperCase(),
+      layout.name,
+      APP_SETTINGS.fonts.name,
+      layout.name.maxWidth
+    );
   }
 
   drawOutlinedText(
@@ -162,9 +239,15 @@ export async function renderToken(canvas, token, { includeTransparentBackground 
     APP_SETTINGS.fonts.range,
     layout.range.maxWidth || 90
   );
+
   const boltCount = Math.max(0, Math.min(6, Number(token.bolts) || 0));
   for (let index = 0; index < boltCount; index += 1) {
-    drawBolt(ctx, layout.bolts.startX + index * layout.bolts.stepX, layout.bolts.y, layout.bolts);
+    drawBolt(
+      ctx,
+      layout.bolts.startX + index * layout.bolts.stepX,
+      layout.bolts.y,
+      layout.bolts
+    );
   }
 
   if (token.special) {
@@ -176,18 +259,16 @@ export async function renderToken(canvas, token, { includeTransparentBackground 
   );
 
   if (teamAbility?.image) {
-    await drawConfiguredIcon(
-	  ctx,
-	  teamAbility,
-	  layout.teamAbility
-    );
+    await drawConfiguredIcon(ctx, teamAbility, layout.teamAbility);
   }
 
   for (const statDefinition of STAT_DEFINITIONS) {
     const stat = token.stats[statDefinition.id];
     const position = layout.stats[statDefinition.id];
     const color = getAbilityColor(statDefinition.id, stat.abilityId);
-    const iconDefinition = statDefinition.icons.find((entry) => entry.id === stat.iconId) || statDefinition.icons[0];
+    const iconDefinition = statDefinition.icons.find(
+      (entry) => entry.id === stat.iconId
+    ) || statDefinition.icons[0];
     const icon = await loadImage(iconDefinition.image);
 
     await drawTintedMask(ctx, position.fillMask, color);
@@ -206,6 +287,7 @@ export async function renderToken(canvas, token, { includeTransparentBackground 
       position.iconWidth * iconScale,
       position.iconHeight * iconScale
     );
+
     ctx.save();
     ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(
@@ -215,6 +297,27 @@ export async function renderToken(canvas, token, { includeTransparentBackground 
       dimensions.width,
       dimensions.height
     );
+    ctx.restore();
+  }
+
+  ctx.restore(); // Normal-layout coordinate translation.
+  ctx.restore(); // Complete output shape clip.
+
+  // Preview-only cut guide. PDF export never requests this option.
+  if (showCutLine && bleedScale > 1) {
+    ctx.save();
+    createShapePath(
+      ctx,
+      tokenShape,
+      outputSize / 2,
+      outputSize / 2,
+      normalSize,
+      normalSize
+    );
+    ctx.strokeStyle = "#ff0000";
+    ctx.lineWidth = 5;
+    ctx.setLineDash([18, 14]);
+    ctx.stroke();
     ctx.restore();
   }
 

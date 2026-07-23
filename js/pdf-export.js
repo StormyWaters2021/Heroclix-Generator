@@ -78,7 +78,12 @@ function buildPdf(jpegPages, pixelWidth, pixelHeight) {
 }
 
 function expandQueue(queue) {
-  return queue.flatMap((item) => Array.from({ length: Math.max(1, Number(item.quantity) || 1) }, () => item.token));
+  return queue.flatMap((item) =>
+    Array.from(
+      { length: Math.max(1, Number(item.quantity) || 1) },
+      () => item.tokens
+    )
+  );
 }
 
 function getLayout(mode, includeBleed, tightPack) {
@@ -88,12 +93,16 @@ function getLayout(mode, includeBleed, tightPack) {
   if (includeBleed) {
     return { ...PRINT_SETTINGS.modes.max.bleed, type: "centered-bleed" };
   }
-  return { ...(tightPack ? PRINT_SETTINGS.modes.max.tight : PRINT_SETTINGS.modes.max.normal), type: "centered" };
+  return {
+    ...(tightPack ? PRINT_SETTINGS.modes.max.tight : PRINT_SETTINGS.modes.max.normal),
+    type: "centered"
+  };
 }
 
 function getPositions(layout) {
   const page = PRINT_SETTINGS.page;
   const positions = [];
+
   if (layout.type === "avery") {
     for (let row = 0; row < layout.rows; row += 1) {
       for (let column = 0; column < layout.columns; column += 1) {
@@ -122,6 +131,7 @@ function getPositions(layout) {
       });
     }
   }
+
   return positions;
 }
 
@@ -130,9 +140,83 @@ export function getTokensPerPage(mode, includeBleed, tightPack) {
   return layout.columns * layout.rows;
 }
 
+async function getRenderedTokenCanvas(cache, token, bleedScale) {
+  const cacheKey = `${token.id}:${bleedScale}`;
+  let tokenCanvas = cache.get(cacheKey);
+
+  if (!tokenCanvas) {
+    tokenCanvas = document.createElement("canvas");
+    await renderToken(tokenCanvas, token, { bleedScale });
+    cache.set(cacheKey, tokenCanvas);
+  }
+
+  return tokenCanvas;
+}
+
+async function renderPdfPage({
+  pairs,
+  side,
+  positions,
+  renderedPixels,
+  bleedScale,
+  dpi,
+  pageWidth,
+  pageHeight,
+  tokenCanvases,
+  mirrorHorizontally = false
+}) {
+  const pageCanvas = document.createElement("canvas");
+  pageCanvas.width = pageWidth;
+  pageCanvas.height = pageHeight;
+
+  const ctx = pageCanvas.getContext("2d", {
+    alpha: false,
+    desynchronized: true
+  });
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, pageWidth, pageHeight);
+
+  for (let index = 0; index < pairs.length; index += 1) {
+    const pair = pairs[index];
+    const token = pair[side];
+    const tokenCanvas = await getRenderedTokenCanvas(
+      tokenCanvases,
+      token,
+      bleedScale
+    );
+
+    const position = positions[index];
+    const centerXInches = mirrorHorizontally
+      ? PRINT_SETTINGS.page.widthInches - position.centerX
+      : position.centerX;
+    const centerX = Math.round(centerXInches * dpi);
+    const centerY = Math.round(position.centerY * dpi);
+
+    ctx.drawImage(
+      tokenCanvas,
+      centerX - renderedPixels / 2,
+      centerY - renderedPixels / 2,
+      renderedPixels,
+      renderedPixels
+    );
+  }
+
+  return dataUrlToBytes(
+    pageCanvas.toDataURL(
+      "image/jpeg",
+      PRINT_SETTINGS.page.jpegQuality ?? 1
+    )
+  );
+}
+
 export async function createPrintPdf(queue, options = {}) {
-  const tokens = expandQueue(queue);
-  if (!tokens.length) throw new Error("Add at least one token to the print list first.");
+  const pairs = expandQueue(queue);
+  if (!pairs.length) {
+    throw new Error("Add at least one token to the print list first.");
+  }
 
   const mode = options.mode || "max";
   const includeBleed = Boolean(options.includeBleed);
@@ -142,66 +226,46 @@ export async function createPrintPdf(queue, options = {}) {
   const dpi = PRINT_SETTINGS.page.renderDpi;
   const pageWidth = Math.round(PRINT_SETTINGS.page.widthInches * dpi);
   const pageHeight = Math.round(PRINT_SETTINGS.page.heightInches * dpi);
-  const tokenPixels = Math.round(layout.tokenDiameterInches * dpi);
-  const bleedPixels = Math.round(PRINT_SETTINGS.bleedInches * dpi);
+
+  const renderedDiameterInches = includeBleed
+    ? layout.tokenDiameterInches + PRINT_SETTINGS.bleedInches * 2
+    : layout.tokenDiameterInches;
+  const renderedPixels = Math.round(renderedDiameterInches * dpi);
+  const bleedScale = renderedDiameterInches / layout.tokenDiameterInches;
+
   const tokenCanvases = new Map();
   const jpegPages = [];
 
-  for (let pageStart = 0; pageStart < tokens.length; pageStart += positions.length) {
-    const pageCanvas = document.createElement("canvas");
-    pageCanvas.width = pageWidth;
-    pageCanvas.height = pageHeight;
-	const ctx = pageCanvas.getContext("2d", {
-	  alpha: false,
-	  desynchronized: true
-	});
+  for (let pageStart = 0; pageStart < pairs.length; pageStart += positions.length) {
+    const pagePairs = pairs.slice(pageStart, pageStart + positions.length);
 
-	ctx.imageSmoothingEnabled = true;
-	ctx.imageSmoothingQuality = "high";
+    // Front and back pages are interleaved for ordinary duplex printing.
+    jpegPages.push(await renderPdfPage({
+      pairs: pagePairs,
+      side: "front",
+      positions,
+      renderedPixels,
+      bleedScale,
+      dpi,
+      pageWidth,
+      pageHeight,
+      tokenCanvases
+    }));
 
-	ctx.fillStyle = "#ffffff";
-	ctx.fillRect(0, 0, pageWidth, pageHeight);
-
-    const pageTokens = tokens.slice(pageStart, pageStart + positions.length);
-    for (let index = 0; index < pageTokens.length; index += 1) {
-      const token = pageTokens[index];
-      let tokenCanvas = tokenCanvases.get(token.id);
-      if (!tokenCanvas) {
-        tokenCanvas = document.createElement("canvas");
-        await renderToken(tokenCanvas, token);
-        tokenCanvases.set(token.id, tokenCanvas);
-      }
-
-      const position = positions[index];
-      const centerX = Math.round(position.centerX * dpi);
-      const centerY = Math.round(position.centerY * dpi);
-
-      if (includeBleed) {
-        ctx.save();
-        ctx.fillStyle = "#000000";
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, tokenPixels / 2 + bleedPixels, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      ctx.drawImage(
-        tokenCanvas,
-        centerX - tokenPixels / 2,
-        centerY - tokenPixels / 2,
-        tokenPixels,
-        tokenPixels
-      );
-    }
-
-		jpegPages.push(
-		  dataUrlToBytes(
-			pageCanvas.toDataURL(
-			  "image/jpeg",
-			  PRINT_SETTINGS.page.jpegQuality ?? 1
-			)
-		  )
-		);
+    // Back positions are mirrored left-to-right so they align after a
+    // portrait sheet is flipped on its long edge. Token artwork is not mirrored.
+    jpegPages.push(await renderPdfPage({
+      pairs: pagePairs,
+      side: "back",
+      positions,
+      renderedPixels,
+      bleedScale,
+      dpi,
+      pageWidth,
+      pageHeight,
+      tokenCanvases,
+      mirrorHorizontally: true
+    }));
   }
 
   return buildPdf(jpegPages, pageWidth, pageHeight);

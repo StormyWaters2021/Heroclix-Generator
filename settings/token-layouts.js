@@ -1,15 +1,16 @@
 export const TOKEN_LAYOUTS = {
   classic: {
+    shape: "circle",
     artwork: {
       centerX: 760,
       centerY: 610,
       clipCenterX: 627,
       clipCenterY: 627,
-      clipRadius: 610,
+      clipInset: 17,
       defaultScale: 1
     },
     name: {
-      x: 625,
+      x: 627,
       y: 175,
       maxWidth: 735,
       align: "center",
@@ -66,5 +67,74 @@ export const TOKEN_LAYOUTS = {
 	  height: 75,
 	  rotation: 0
 	},
-  }
+  },
+  "art-only": {
+    shape: "circle",
+    artwork: {
+      centerX: 627,
+      centerY: 627,
+      clipCenterX: 627,
+      clipCenterY: 627,
+      clipInset: 17,
+      defaultScale: 1
+    },
+    name: {
+      x: 627,
+      y: 200,
+      maxWidth: 735,
+      align: "center",
+      baseline: "middle",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 10
+    },
+    range: {
+      x: -1000,
+      y: -1000,
+      align: "center",
+      baseline: "middle",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 8,
+      maxWidth: 140
+    },
+    bolts: {
+      startX: -1000,
+      y: -1000,
+      width: 32,
+      height: 48,
+      stepX: 25,
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 5
+    },
+    stats: {
+      speed: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 0, iconHeight: 0, fillMask: { image: null, x: 302, y: 461 } },
+      attack: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 0, iconHeight: 0, fillMask: { image: null, x: 342, y: 615 } },
+      defense: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 0, iconHeight: 0, fillMask: { image: null, x: 382, y: 768 } },
+      damage: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 0, iconHeight: 0, fillMask: { image: null, x: 423, y: 922 } }
+    },
+    statText: {
+      align: "center",
+      baseline: "middle",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 8
+    },
+	special: {
+	  x: -1000,
+	  y: -1000,
+	  width: 85,
+	  height: 85,
+	  rotation: 0
+	},
+
+	teamAbility: {
+	  x: -1000,
+	  y: -1000,
+	  width: 75,
+	  height: 75,
+	  rotation: 0
+	},
+  },
 };

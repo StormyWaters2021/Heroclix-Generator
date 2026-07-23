@@ -8,8 +8,8 @@ export function createDefaultToken() {
     name: "",
     range: 6,
     bolts: 1,
-	special: false,
-	teamAbilityId: "none",
+    special: false,
+    teamAbilityId: "none",
     artwork: {
       dataUrl: "",
       x: 0,
@@ -36,27 +36,80 @@ export function cloneToken(token, { preserveId = false } = {}) {
   return clone;
 }
 
+export function createDefaultTokenPair() {
+  return {
+    front: createDefaultToken(),
+    back: createDefaultToken()
+  };
+}
+
+export function cloneTokenPair(pair, { preserveIds = false } = {}) {
+  return {
+    front: cloneToken(pair.front, { preserveId: preserveIds }),
+    back: cloneToken(pair.back, { preserveId: preserveIds })
+  };
+}
+
 export function createInitialState() {
   return {
     version: APP_SETTINGS.projectVersion,
-    currentToken: createDefaultToken(),
+    currentTokens: createDefaultTokenPair(),
+    activeSide: "front",
     queue: [],
     editingQueueId: null
+  };
+}
+
+function normalizeToken(token) {
+  const fallback = createDefaultToken();
+  if (!token || typeof token !== "object") return fallback;
+
+  return {
+    ...fallback,
+    ...token,
+    artwork: {
+      ...fallback.artwork,
+      ...(token.artwork || {})
+    },
+    stats: Object.fromEntries(
+      STAT_DEFINITIONS.map((definition) => [
+        definition.id,
+        {
+          ...fallback.stats[definition.id],
+          ...(token.stats?.[definition.id] || {})
+        }
+      ])
+    )
+  };
+}
+
+function normalizePair(pair, legacyToken) {
+  return {
+    front: normalizeToken(pair?.front || legacyToken),
+    back: normalizeToken(pair?.back)
   };
 }
 
 export function normalizeProject(project) {
   const fallback = createInitialState();
   if (!project || typeof project !== "object") return fallback;
+
   return {
     version: APP_SETTINGS.projectVersion,
-    currentToken: project.currentToken ? { ...createDefaultToken(), ...project.currentToken } : fallback.currentToken,
+    currentTokens: normalizePair(project.currentTokens, project.currentToken),
+    activeSide: project.activeSide === "back" ? "back" : "front",
     queue: Array.isArray(project.queue)
-      ? project.queue.map((item) => ({
-          id: item.id || crypto.randomUUID(),
-          quantity: Math.max(1, Number(item.quantity) || 1),
-          token: { ...createDefaultToken(), ...(item.token || {}) }
-        }))
+      ? project.queue.map((item) => {
+          const pair = item.tokens
+            ? normalizePair(item.tokens)
+            : normalizePair(null, item.token);
+
+          return {
+            id: item.id || crypto.randomUUID(),
+            quantity: Math.max(1, Number(item.quantity) || 1),
+            tokens: pair
+          };
+        })
       : [],
     editingQueueId: null
   };

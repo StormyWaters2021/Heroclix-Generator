@@ -123,6 +123,10 @@
           <canvas id="token-canvas" width="1254" height="1254" aria-label="Token preview"></canvas>
           <p id="canvas-loading" class="canvas-message">Loading template…</p>
         </div>
+        <div class="token-side-toggle" role="group" aria-label="Token side">
+          <button class="token-side-button is-active" type="button" data-token-side="front" aria-pressed="true">Front</button>
+          <button class="token-side-button" type="button" data-token-side="back" aria-pressed="false">Back</button>
+        </div>
       </div>
 
       <section class="panel queue-panel" aria-labelledby="queue-heading">
@@ -155,7 +159,7 @@
           </label>
           <label class="check-row">
             <input id="bleed-input" type="checkbox">
-            <span>Include ¼-inch black bleed</span>
+            <span>Include ¼-inch bleed and show cut line</span>
           </label>
           <label id="tight-pack-row" class="check-row">
             <input id="tight-pack-input" type="checkbox">
@@ -164,7 +168,7 @@
         </div>
         <p id="page-summary" class="help-text">30 tokens per page.</p>
         <button id="export-pdf-button" class="button button--primary button--wide" type="button">Export PDF</button>
-        <p class="print-note">Print the PDF at Actual Size or 100%. Do not use Fit, Shrink, or Scale to Page.</p>
+        <p class="print-note">The PDF alternates front and mirrored-back pages for duplex printing. Print at Actual Size or 100%, flip on the long edge, and do not use Fit, Shrink, or Scale to Page.</p>
       </section>
     </section>
   </main>
