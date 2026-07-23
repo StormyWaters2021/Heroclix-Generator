@@ -8,6 +8,8 @@ export function createDefaultToken() {
     name: "",
     range: 6,
     bolts: 1,
+	special: false,
+	teamAbilityId: "none",
     artwork: {
       dataUrl: "",
       x: 0,

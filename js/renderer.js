@@ -1,6 +1,10 @@
 import { APP_SETTINGS } from "../settings/app-settings.js";
 import { TOKEN_LAYOUTS } from "../settings/token-layouts.js";
-import { STAT_DEFINITIONS } from "../settings/icon-options.js";
+import {
+  STAT_DEFINITIONS,
+  SPECIAL_ICON,
+  TEAM_ABILITY_OPTIONS
+} from "../settings/icon-options.js";
 import { getAbilityColor } from "../settings/ability-colors.js";
 import { loadImage } from "./assets.js";
 
@@ -79,6 +83,33 @@ function containSize(image, maxWidth, maxHeight) {
   return { width: image.width * scale, height: image.height * scale };
 }
 
+async function drawConfiguredIcon(ctx, iconDefinition, position) {
+  if (!iconDefinition?.image || !position) return;
+
+  const image = await loadImage(iconDefinition.image);
+  const scale = Number(iconDefinition.scale) || 1;
+
+  const dimensions = containSize(
+    image,
+    position.width * scale,
+    position.height * scale
+  );
+
+  ctx.save();
+  ctx.translate(position.x, position.y);
+  ctx.rotate(((Number(position.rotation) || 0) * Math.PI) / 180);
+
+  ctx.drawImage(
+    image,
+    -dimensions.width / 2,
+    -dimensions.height / 2,
+    dimensions.width,
+    dimensions.height
+  );
+
+  ctx.restore();
+}
+
 export async function renderToken(canvas, token, { includeTransparentBackground = true } = {}) {
   const size = APP_SETTINGS.canvasSize;
   if (canvas.width !== size) canvas.width = size;
@@ -134,6 +165,22 @@ export async function renderToken(canvas, token, { includeTransparentBackground 
   const boltCount = Math.max(0, Math.min(6, Number(token.bolts) || 0));
   for (let index = 0; index < boltCount; index += 1) {
     drawBolt(ctx, layout.bolts.startX + index * layout.bolts.stepX, layout.bolts.y, layout.bolts);
+  }
+
+  if (token.special) {
+    await drawConfiguredIcon(ctx, SPECIAL_ICON, layout.special);
+  }
+
+  const teamAbility = TEAM_ABILITY_OPTIONS.find(
+    (ability) => ability.id === token.teamAbilityId
+  );
+
+  if (teamAbility?.image) {
+    await drawConfiguredIcon(
+	  ctx,
+	  teamAbility,
+	  layout.teamAbility
+    );
   }
 
   for (const statDefinition of STAT_DEFINITIONS) {

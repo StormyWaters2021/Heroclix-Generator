@@ -33,7 +33,7 @@ export const TOKEN_LAYOUTS = {
       y: 370,
       width: 32,
       height: 48,
-      stepX: 36,
+      stepX: 25,
       fill: "#ffffff",
       stroke: "#000000",
       strokeWidth: 5
@@ -50,6 +50,21 @@ export const TOKEN_LAYOUTS = {
       fill: "#ffffff",
       stroke: "#000000",
       strokeWidth: 8
-    }
+    },
+	special: {
+	  x: 375,
+	  y: 375,
+	  width: 85,
+	  height: 85,
+	  rotation: 0
+	},
+
+	teamAbility: {
+	  x: 450,
+	  y: 375,
+	  width: 75,
+	  height: 75,
+	  rotation: 0
+	},
   }
 };

@@ -1,5 +1,8 @@
 import { APP_SETTINGS } from "../settings/app-settings.js";
-import { STAT_DEFINITIONS } from "../settings/icon-options.js";
+import {
+  STAT_DEFINITIONS,
+  TEAM_ABILITY_OPTIONS
+} from "../settings/icon-options.js";
 import { getAbilityOptions } from "../settings/ability-colors.js";
 import { createInitialState, createDefaultToken, cloneToken, normalizeProject } from "./state.js";
 import { fileToDataUrl } from "./assets.js";
@@ -15,6 +18,8 @@ const elements = {
   template: document.querySelector("#template-select"),
   range: document.querySelector("#range-input"),
   bolts: document.querySelector("#bolts-input"),
+  special: document.querySelector("#special-input"),
+  teamAbility: document.querySelector("#team-ability-select"),
   artwork: document.querySelector("#artwork-input"),
   zoom: document.querySelector("#zoom-input"),
   zoomOutput: document.querySelector("#zoom-output"),
@@ -37,6 +42,7 @@ const elements = {
   tightPack: document.querySelector("#tight-pack-input"),
   tightPackRow: document.querySelector("#tight-pack-row"),
   pageSummary: document.querySelector("#page-summary"),
+  versionFooter: document.querySelector("#version-footer"),
   exportPdf: document.querySelector("#export-pdf-button")
 };
 
@@ -79,6 +85,17 @@ function populateTemplates() {
     option.value = template.id;
     option.textContent = template.label;
     elements.template.append(option);
+  }
+}
+
+function populateTeamAbilities() {
+  elements.teamAbility.replaceChildren();
+
+  for (const ability of TEAM_ABILITY_OPTIONS) {
+    const option = document.createElement("option");
+    option.value = ability.id;
+    option.textContent = ability.label;
+    elements.teamAbility.append(option);
   }
 }
 
@@ -132,6 +149,8 @@ function syncFormFromState() {
   elements.template.value = token.templateId;
   elements.range.value = token.range;
   elements.bolts.value = token.bolts;
+  elements.special.checked = Boolean(token.special);
+  elements.teamAbility.value = token.teamAbilityId || "none";
   elements.zoom.value = Math.round(token.artwork.zoom * 100);
   elements.zoomOutput.textContent = `${Math.round(token.artwork.zoom * 100)}%`;
   elements.rotation.value = token.artwork.rotation;
@@ -324,6 +343,15 @@ function attachInputListeners() {
     state.currentToken.bolts = elements.bolts.value;
     redraw();
   });
+  elements.special.addEventListener("change", () => {
+    state.currentToken.special = elements.special.checked;
+    redraw();
+  });
+
+  elements.teamAbility.addEventListener("change", () => {
+    state.currentToken.teamAbilityId = elements.teamAbility.value;
+    redraw();
+  });
   elements.zoom.addEventListener("input", () => {
     state.currentToken.artwork.zoom = Number(elements.zoom.value) / 100;
     elements.zoomOutput.textContent = `${elements.zoom.value}%`;
@@ -392,6 +420,27 @@ function attachInputListeners() {
   });
 }
 
+function initializeVersionFooter() {
+  const versionSettings = APP_SETTINGS.versionmsg;
+  const footer = elements.versionFooter;
+
+  if (!footer) return;
+
+  const shouldShow =
+    versionSettings?.visible !== false &&
+    typeof versionSettings?.text === "string" &&
+    versionSettings.text.trim() !== "";
+
+  if (!shouldShow) {
+    footer.hidden = true;
+    footer.textContent = "";
+    return;
+  }
+
+  footer.textContent = versionSettings.text.trim();
+  footer.hidden = false;
+}
+
 function attachArtworkDrag() {
   elements.canvas.addEventListener("pointerdown", (event) => {
     if (!state.currentToken.artwork.dataUrl) return;
@@ -430,6 +479,7 @@ async function initialize() {
   populateTemplates();
   populateStatControls();
   attachInputListeners();
+  populateTeamAbilities();
   attachArtworkDrag();
 
   const saved = localStorage.getItem(APP_SETTINGS.storageKey);
@@ -442,6 +492,7 @@ async function initialize() {
   }
 
   syncFormFromState();
+  initializeVersionFooter();
   await renderQueue();
   updatePrintSummary();
 }

@@ -84,6 +84,28 @@
         <legend>Stats</legend>
         <div id="stat-controls" class="stat-controls"></div>
       </fieldset>
+	  <fieldset class="fieldset">
+		  <legend>Additional options</legend>
+
+		  <div class="additional-symbol-controls">
+			<label class="special-option">
+			  <input id="special-input" type="checkbox">
+
+			  <span>Special</span>
+			   <img
+				class="special-option__icon"
+				src="assets/icons/special/star.png"
+				alt=""
+				aria-hidden="true"
+			  >
+			</label>
+
+			<label class="field">
+			  <span>Team ability</span>
+			  <select id="team-ability-select"></select>
+			</label>
+		  </div>
+		</fieldset>
 
       <div class="editor-actions">
         <button id="add-to-queue-button" class="button button--primary" type="button">Add token to print list</button>
@@ -164,7 +186,12 @@
       </label>
     </div>
   </template>
-
+  <footer
+	  id="version-footer"
+	  class="version-footer"
+	  hidden
+	></footer>
   <script type="module" src="js/app.js"></script>
+
 </body>
 </html>
