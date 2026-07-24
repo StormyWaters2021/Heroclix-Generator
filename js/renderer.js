@@ -8,24 +8,46 @@ import {
 import { getAbilityColor } from "../settings/ability-colors.js";
 import { loadImage } from "./assets.js";
 
+function resolveFontSettings(token, fontRole) {
+  const role = APP_SETTINGS.fontRoles?.[fontRole] || {};
+  const selectedFontId = token.fontSelections?.[fontRole]
+    || role.fontId
+    || APP_SETTINGS.defaultFontId;
+  const fallbackFont = APP_SETTINGS.fontCatalog?.[APP_SETTINGS.defaultFontId] || {};
+  const selectedFont = APP_SETTINGS.fontCatalog?.[selectedFontId] || fallbackFont;
+
+  return {
+    ...fallbackFont,
+    ...selectedFont,
+    ...role
+  };
+}
+
 function buildFont(settings) {
   const style = settings.style || "normal";
   const weight = settings.weight || "400";
-  return `${style} ${weight} ${settings.size}px "${settings.family}", ${settings.fallback || "sans-serif"}`;
+  const family = settings.family || "sans-serif";
+  const fallback = settings.fallback ? `, ${settings.fallback}` : "";
+  return `${style} ${weight} ${settings.size}px "${family}"${fallback}`;
 }
 
 function fitText(ctx, text, settings, maxWidth) {
-  let size = settings.size;
+  let size = Number(settings.size) || 16;
+  const minSize = Number(settings.minSize) || 1;
+
   do {
     ctx.font = buildFont({ ...settings, size });
     if (ctx.measureText(text).width <= maxWidth) break;
     size -= 2;
-  } while (size > 18);
+  } while (size > minSize);
+
+  return Math.max(size, minSize);
 }
 
 function drawOutlinedText(ctx, text, position, font, maxWidth) {
   ctx.save();
-  fitText(ctx, text, font, maxWidth);
+  const size = fitText(ctx, text, font, maxWidth);
+  ctx.font = buildFont({ ...font, size });
   ctx.textAlign = position.align;
   ctx.textBaseline = position.baseline;
   ctx.lineJoin = "round";
@@ -34,6 +56,134 @@ function drawOutlinedText(ctx, text, position, font, maxWidth) {
   ctx.fillStyle = position.fill;
   if (position.strokeWidth > 0) ctx.strokeText(text, position.x, position.y, maxWidth);
   ctx.fillText(text, position.x, position.y, maxWidth);
+  ctx.restore();
+}
+
+function wrapParagraph(ctx, paragraph, maxWidth) {
+  const words = paragraph.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [""];
+
+  const lines = [];
+  let line = "";
+
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+
+    if (ctx.measureText(candidate).width <= maxWidth) {
+      line = candidate;
+      continue;
+    }
+
+    if (line) lines.push(line);
+
+    // Break unusually long words so every line remains inside the box.
+    if (ctx.measureText(word).width > maxWidth) {
+      let segment = "";
+      for (const character of word) {
+        const nextSegment = segment + character;
+        if (segment && ctx.measureText(nextSegment).width > maxWidth) {
+          lines.push(segment);
+          segment = character;
+        } else {
+          segment = nextSegment;
+        }
+      }
+      line = segment;
+    } else {
+      line = word;
+    }
+  }
+
+  if (line) lines.push(line);
+  return lines;
+}
+
+function wrapText(ctx, text, maxWidth) {
+  return String(text)
+    .split(/\r?\n/)
+    .flatMap((paragraph) => wrapParagraph(ctx, paragraph, maxWidth));
+}
+
+function getTokenTextValue(token, source) {
+  return String(source || "")
+    .split(".")
+    .reduce((value, key) => value?.[key], token);
+}
+
+function drawConfiguredTextArea(ctx, token, area) {
+  const rawText = getTokenTextValue(token, area.source);
+  const text = String(rawText ?? "").trim();
+  if (!text) return;
+
+  const font = resolveFontSettings(token, area.fontRole);
+  const startSize = Number(font.size) || 16;
+  const minSize = Number(font.minSize) || 1;
+  const lineHeightRatio = Number(area.lineHeight) || 1.15;
+  const shrinkToFit = area.shrinkToFit !== false;
+
+  let size = startSize;
+  let lines = [];
+  let lineHeight = size * lineHeightRatio;
+
+  while (size >= minSize) {
+    ctx.font = buildFont({ ...font, size });
+    lines = area.wrap === false
+      ? text.split(/\r?\n/)
+      : wrapText(ctx, text, area.width);
+    lineHeight = size * lineHeightRatio;
+
+    const fitsHeight = lines.length * lineHeight <= area.height;
+    const fitsLines = !area.maxLines || lines.length <= area.maxLines;
+    if ((fitsHeight && fitsLines) || !shrinkToFit) break;
+    size -= 2;
+  }
+
+  size = Math.max(size, minSize);
+  ctx.save();
+  ctx.font = buildFont({ ...font, size });
+  ctx.textAlign = area.align || "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = area.stroke || "transparent";
+  ctx.lineWidth = Number(area.strokeWidth) || 0;
+  ctx.fillStyle = area.fill || "#000000";
+
+  const visibleLines = area.maxLines ? lines.slice(0, area.maxLines) : lines;
+  const totalHeight = visibleLines.length * lineHeight;
+  let firstLineY;
+
+  if (area.verticalAlign === "top") {
+    firstLineY = area.y - area.height / 2 + lineHeight / 2;
+  } else if (area.verticalAlign === "bottom") {
+    firstLineY = area.y + area.height / 2 - totalHeight + lineHeight / 2;
+  } else {
+    firstLineY = area.y - totalHeight / 2 + lineHeight / 2;
+  }
+
+  visibleLines.forEach((line, index) => {
+    const y = firstLineY + index * lineHeight;
+    if (area.strokeWidth > 0) ctx.strokeText(line, area.x, y, area.width);
+    ctx.fillText(line, area.x, y, area.width);
+  });
+
+  ctx.restore();
+}
+
+function drawSpecialMarker(ctx, marker) {
+  if (!marker) return;
+
+  const lineWidth = Number(marker.lineWidth) || 6;
+
+  ctx.save();
+  ctx.strokeStyle = marker.stroke || "#000000";
+  ctx.lineWidth = lineWidth;
+  ctx.lineJoin = "miter";
+  ctx.strokeRect(
+    marker.x - marker.width / 2,
+    marker.y - marker.height / 2,
+    marker.width,
+    marker.height
+  );
   ctx.restore();
 }
 
@@ -125,7 +275,7 @@ function resolveTemplate(token) {
 
 export function getTokenShape(token) {
   const template = resolveTemplate(token);
-  const layout = TOKEN_LAYOUTS[template.layoutId];
+  const layout = TOKEN_LAYOUTS[template.id];
   return template.shape || layout?.shape || "circle";
 }
 
@@ -154,8 +304,8 @@ export async function renderToken(
   }
 
   const template = resolveTemplate(token);
-  const layout = TOKEN_LAYOUTS[template.layoutId];
-  if (!layout) throw new Error(`Missing token layout: ${template.layoutId}`);
+  const layout = TOKEN_LAYOUTS[template.id];
+  if (!layout) throw new Error(`Missing token layout: ${template.id}`);
 
   const tokenShape = template.shape || layout.shape || "circle";
   const clipInset = Math.max(0, Number(layout.artwork?.clipInset) || 0);
@@ -227,17 +377,21 @@ export async function renderToken(
       ctx,
       token.name.trim().toUpperCase(),
       layout.name,
-      APP_SETTINGS.fonts.name,
+      resolveFontSettings(token, layout.name.fontRole),
       layout.name.maxWidth
     );
+  }
+
+  for (const area of Object.values(layout.textAreas || {})) {
+    drawConfiguredTextArea(ctx, token, area);
   }
 
   drawOutlinedText(
     ctx,
     String(token.range ?? ""),
     layout.range,
-    APP_SETTINGS.fonts.range,
-    layout.range.maxWidth || 90
+    resolveFontSettings(token, layout.range.fontRole),
+    layout.range.maxWidth
   );
 
   const boltCount = Math.max(0, Math.min(6, Number(token.bolts) || 0));
@@ -265,7 +419,9 @@ export async function renderToken(
   for (const statDefinition of STAT_DEFINITIONS) {
     const stat = token.stats[statDefinition.id];
     const position = layout.stats[statDefinition.id];
-    const color = getAbilityColor(statDefinition.id, stat.abilityId);
+    const color = stat.special
+      ? getAbilityColor(statDefinition.id, "none")
+      : getAbilityColor(statDefinition.id, stat.abilityId);
     const iconDefinition = statDefinition.icons.find(
       (entry) => entry.id === stat.iconId
     ) || statDefinition.icons[0];
@@ -273,12 +429,16 @@ export async function renderToken(
 
     await drawTintedMask(ctx, position.fillMask, color);
 
+    if (stat.special) {
+      drawSpecialMarker(ctx, position.specialMarker);
+    }
+
     drawOutlinedText(
       ctx,
       String(stat.value ?? ""),
       { ...layout.statText, x: position.x, y: position.y },
-      APP_SETTINGS.fonts.stats,
-      92
+      resolveFontSettings(token, layout.statText.fontRole),
+      layout.statText.maxWidth
     );
 
     const iconScale = iconDefinition.scale || 1;

@@ -220,6 +220,7 @@ export async function createPrintPdf(queue, options = {}) {
 
   const mode = options.mode || "max";
   const includeBleed = Boolean(options.includeBleed);
+  const doubleSided = options.doubleSided !== false;
   const tightPack = Boolean(options.tightPack);
   const layout = getLayout(mode, includeBleed, tightPack);
   const positions = getPositions(layout);
@@ -252,20 +253,22 @@ export async function createPrintPdf(queue, options = {}) {
       tokenCanvases
     }));
 
-    // Back positions are mirrored left-to-right so they align after a
-    // portrait sheet is flipped on its long edge. Token artwork is not mirrored.
-    jpegPages.push(await renderPdfPage({
-      pairs: pagePairs,
-      side: "back",
-      positions,
-      renderedPixels,
-      bleedScale,
-      dpi,
-      pageWidth,
-      pageHeight,
-      tokenCanvases,
-      mirrorHorizontally: true
-    }));
+    if (doubleSided) {
+      // Back positions are mirrored left-to-right so they align after a
+      // portrait sheet is flipped on its long edge. Token artwork is not mirrored.
+      jpegPages.push(await renderPdfPage({
+        pairs: pagePairs,
+        side: "back",
+        positions,
+        renderedPixels,
+        bleedScale,
+        dpi,
+        pageWidth,
+        pageHeight,
+        tokenCanvases,
+        mirrorHorizontally: true
+      }));
+    }
   }
 
   return buildPdf(jpegPages, pageWidth, pageHeight);

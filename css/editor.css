@@ -143,8 +143,9 @@
   }
 
   .field--ability {
-    grid-column: 2 / -1;
+    grid-column: 2 / 4;
   }
+
 }
 
 .additional-symbol-controls {

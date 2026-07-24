@@ -13,6 +13,7 @@ export const TOKEN_LAYOUTS = {
       x: 627,
       y: 175,
       maxWidth: 735,
+      fontRole: "name",
       align: "center",
       baseline: "middle",
       fill: "#ffffff",
@@ -22,6 +23,7 @@ export const TOKEN_LAYOUTS = {
     range: {
       x: 168,
       y: 375,
+      fontRole: "range",
       align: "center",
       baseline: "middle",
       fill: "#ffffff",
@@ -40,12 +42,14 @@ export const TOKEN_LAYOUTS = {
       strokeWidth: 5
     },
     stats: {
-      speed: { x: 400, y: 530, iconX: 205, iconY: 535, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/speed.png", x: 302, y: 461 } },
-      attack: { x: 440, y: 690, iconX: 240, iconY: 685, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/attack.png", x: 342, y: 615 } },
-      defense: { x: 480, y: 840, iconX: 290, iconY: 845, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/defense.png", x: 382, y: 768 } },
-      damage: { x: 525, y: 995, iconX: 338, iconY: 995, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/damage.png", x: 423, y: 922 } }
+      speed: { x: 400, y: 530, iconX: 205, iconY: 535, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/speed.png", x: 302, y: 461 }, specialMarker: { x: 402, y: 522, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } },
+      attack: { x: 440, y: 690, iconX: 240, iconY: 685, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/attack.png", x: 342, y: 615 }, specialMarker: { x: 440, y: 688, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } },
+      defense: { x: 480, y: 840, iconX: 290, iconY: 845, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/defense.png", x: 382, y: 768 }, specialMarker: { x: 480, y: 838, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } },
+      damage: { x: 525, y: 995, iconX: 338, iconY: 995, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/damage.png", x: 423, y: 922 }, specialMarker: { x: 525, y: 993, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } }
     },
     statText: {
+      fontRole: "stats",
+      maxWidth: 92,
       align: "center",
       baseline: "middle",
       fill: "#ffffff",
@@ -82,15 +86,35 @@ export const TOKEN_LAYOUTS = {
       x: 627,
       y: 200,
       maxWidth: 735,
+      fontRole: "name",
       align: "center",
       baseline: "middle",
       fill: "#ffffff",
       stroke: "#000000",
       strokeWidth: 10
     },
+    textAreas: {
+      ability: {
+        source: "ability",
+        x: 600,
+        y: 895,
+        width: 700,
+        height: 400,
+        fontRole: "ability",
+        align: "center",
+        verticalAlign: "top",
+        lineHeight: 1.15,
+        wrap: true,
+        shrinkToFit: true,
+        fill: "#ffffff",
+        stroke: "#000000",
+        strokeWidth: 8
+      }
+    },
     range: {
       x: -1000,
       y: -1000,
+      fontRole: "range",
       align: "center",
       baseline: "middle",
       fill: "#ffffff",
@@ -115,6 +139,8 @@ export const TOKEN_LAYOUTS = {
       damage: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 0, iconHeight: 0, fillMask: { image: null, x: 423, y: 922 } }
     },
     statText: {
+      fontRole: "stats",
+      maxWidth: 92,
       align: "center",
       baseline: "middle",
       fill: "#ffffff",
@@ -122,8 +148,8 @@ export const TOKEN_LAYOUTS = {
       strokeWidth: 8
     },
 	special: {
-	  x: -1000,
-	  y: -1000,
+	  x: 627,
+	  y: 650,
 	  width: 85,
 	  height: 85,
 	  rotation: 0

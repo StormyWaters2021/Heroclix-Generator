@@ -6,6 +6,8 @@ export function createDefaultToken() {
     id: crypto.randomUUID(),
     templateId: APP_SETTINGS.defaultTemplateId,
     name: "",
+    ability: "",
+    fontSelections: {},
     range: 6,
     bolts: 1,
     special: false,
@@ -23,7 +25,8 @@ export function createDefaultToken() {
         {
           value: stat.defaultValue,
           iconId: stat.defaultIcon,
-          abilityId: "none"
+          abilityId: "none",
+          special: false
         }
       ])
     )
@@ -70,6 +73,10 @@ function normalizeToken(token) {
     artwork: {
       ...fallback.artwork,
       ...(token.artwork || {})
+    },
+    fontSelections: {
+      ...fallback.fontSelections,
+      ...(token.fontSelections || {})
     },
     stats: Object.fromEntries(
       STAT_DEFINITIONS.map((definition) => [

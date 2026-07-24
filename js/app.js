@@ -23,6 +23,7 @@ const elements = {
   canvasLoading: document.querySelector("#canvas-loading"),
   sideButtons: [...document.querySelectorAll("[data-token-side]")],
   name: document.querySelector("#name-input"),
+  ability: document.querySelector("#ability-input"),
   template: document.querySelector("#template-select"),
   range: document.querySelector("#range-input"),
   bolts: document.querySelector("#bolts-input"),
@@ -47,6 +48,7 @@ const elements = {
   newProject: document.querySelector("#new-project-button"),
   themeToggle: document.querySelector("#theme-toggle"),
   bleed: document.querySelector("#bleed-input"),
+  doubleSided: document.querySelector("#double-sided-input"),
   tightPack: document.querySelector("#tight-pack-input"),
   tightPackRow: document.querySelector("#tight-pack-row"),
   pageSummary: document.querySelector("#page-summary"),
@@ -118,6 +120,44 @@ function populateTemplates() {
   }
 }
 
+function updateEditorVisibility() {
+  const template = APP_SETTINGS.templates.find(
+    (entry) => entry.id === currentToken().templateId
+  );
+
+  const editorSettings = template?.editor || {};
+
+  for (const element of document.querySelectorAll(
+    "[data-editor-option]"
+  )) {
+    const optionName = element.dataset.editorOption;
+
+    // Controls are visible by default. They are hidden only when
+    // the current template explicitly sets the option to false.
+    element.classList.toggle(
+      "is-hidden",
+      editorSettings[optionName] === false
+    );
+  }
+
+  for (const group of document.querySelectorAll(
+    "[data-editor-option-group]"
+  )) {
+    const controls = [
+      ...group.querySelectorAll("[data-editor-option]")
+    ];
+
+    const hasVisibleControl = controls.some(
+      (control) => !control.classList.contains("is-hidden")
+    );
+
+    group.classList.toggle(
+      "is-hidden",
+      !hasVisibleControl
+    );
+  }
+}
+
 function populateTeamAbilities() {
   elements.teamAbility.replaceChildren();
   for (const ability of TEAM_ABILITY_OPTIONS) {
@@ -153,6 +193,11 @@ function populateStatControls() {
       abilitySelect.append(option);
     }
 
+    const specialOption = document.createElement("option");
+    specialOption.value = "special";
+    specialOption.textContent = "Special";
+    abilitySelect.append(specialOption);
+
     iconSelect.addEventListener("change", () => {
       currentToken().stats[definition.id].iconId = iconSelect.value;
       redraw();
@@ -165,7 +210,9 @@ function populateStatControls() {
     });
 
     abilitySelect.addEventListener("change", () => {
-      currentToken().stats[definition.id].abilityId = abilitySelect.value;
+      const stat = currentToken().stats[definition.id];
+      stat.special = abilitySelect.value === "special";
+      stat.abilityId = stat.special ? "none" : abilitySelect.value;
       redraw();
     });
 
@@ -184,6 +231,7 @@ function syncSideToggle() {
 function syncFormFromState() {
   const token = currentToken();
   elements.name.value = token.name;
+  elements.ability.value = token.ability || "";
   elements.template.value = token.templateId;
   elements.range.value = token.range;
   elements.bolts.value = token.bolts;
@@ -198,13 +246,17 @@ function syncFormFromState() {
     const row = elements.statControls.querySelector(`[data-stat-id="${definition.id}"]`);
     row.querySelector(".stat-icon-select").value = token.stats[definition.id].iconId;
     row.querySelector(".stat-value-input").value = token.stats[definition.id].value;
-    row.querySelector(".stat-ability-select").value = token.stats[definition.id].abilityId;
+    row.querySelector(".stat-ability-select").value = token.stats[definition.id].special
+      ? "special"
+      : token.stats[definition.id].abilityId;
   }
 
   elements.addToQueue.textContent = state.editingQueueId
     ? "Update print item"
     : "Add token to print list";
+
   syncSideToggle();
+  updateEditorVisibility();
   redraw();
 }
 
@@ -389,11 +441,20 @@ function updatePrintSummary() {
   const total = getQueueCopies();
   const sheets = total ? Math.ceil(total / perSheet) : 0;
 
-  elements.pageSummary.textContent = `${perSheet} two-sided tokens per sheet${
-    total
-      ? ` — ${sheets} ${sheets === 1 ? "sheet" : "sheets"} / ${sheets * 2} PDF pages for ${total} copies`
-      : ""
-  }.`;
+  const doubleSided = elements.doubleSided.checked;
+  const pageCount = sheets * (doubleSided ? 2 : 1);
+
+  elements.pageSummary.textContent = `Current layout: ${perSheet} tokens per sheet, ${
+	  doubleSided ? "double-sided" : "single-sided"
+	}${
+	  total
+		? ` — ${sheets} ${
+			sheets === 1 ? "sheet" : "sheets"
+		  } / ${pageCount} PDF ${
+			pageCount === 1 ? "page" : "pages"
+		  } for ${total} copies`
+		: ""
+	}.`;
   elements.tightPackRow.classList.toggle(
     "is-hidden",
     mode !== "max" || includeBleed
@@ -458,8 +519,13 @@ function attachInputListeners() {
     currentToken().name = elements.name.value;
     redraw();
   });
+  elements.ability.addEventListener("input", () => {
+    currentToken().ability = elements.ability.value;
+    redraw();
+  });
   elements.template.addEventListener("change", () => {
     currentToken().templateId = elements.template.value;
+    updateEditorVisibility();
     redraw();
   });
   elements.range.addEventListener("input", () => {
@@ -537,6 +603,7 @@ function attachInputListeners() {
     updatePrintSummary();
     redraw();
   });
+  elements.doubleSided.addEventListener("change", updatePrintSummary);
   elements.tightPack.addEventListener("change", updatePrintSummary);
   elements.exportPdf.addEventListener("click", async () => {
     setBusy(elements.exportPdf, true, "Creating PDF…");
@@ -544,9 +611,13 @@ function attachInputListeners() {
       const pdf = await createPrintPdf(state.queue, {
         mode: currentPrintMode(),
         includeBleed: elements.bleed.checked,
+        doubleSided: elements.doubleSided.checked,
         tightPack: elements.tightPack.checked
       });
-      downloadBlob(pdf, `tokens-${currentPrintMode()}-duplex.pdf`);
+      downloadBlob(
+        pdf,
+        `tokens-${currentPrintMode()}-${elements.doubleSided.checked ? "duplex" : "fronts"}.pdf`
+      );
     } catch (error) {
       console.error(error);
       alert(error.message || "The PDF could not be created.");

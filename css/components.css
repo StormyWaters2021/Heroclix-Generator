@@ -101,7 +101,8 @@
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
   min-height: 2.65rem;
   padding: 0.55rem 0.7rem;
@@ -109,6 +110,14 @@
   border-radius: 0.6rem;
   background: var(--color-control);
   color: var(--color-text);
+}
+
+
+.field textarea {
+  min-height: 7rem;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.4;
 }
 
 .field input[type="range"] {
@@ -158,34 +167,31 @@
   font-weight: 800;
 }
 
-.radio-card,
-.check-row {
+.option-card {
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.8rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: var(--color-control);
+  gap: 0.75rem;
 }
 
-.radio-card:has(input:checked) {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px var(--color-focus);
+.option-card input {
+  flex: 0 0 auto;
+  margin-top: 0.2rem;
 }
 
-.radio-card input,
-.check-row input {
-  margin-top: 0.25rem;
-  accent-color: var(--color-accent);
+.option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
 }
 
-.radio-card span {
-  display: grid;
+.option-copy strong,
+.option-copy small {
+  display: block;
 }
 
-.radio-card small {
-  color: var(--color-muted);
+.option-copy small {
+  opacity: 0.8;
 }
 
 .option-stack {

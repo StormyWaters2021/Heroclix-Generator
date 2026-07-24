@@ -39,7 +39,7 @@
       </div>
 
       <div class="form-grid">
-        <label class="field field--wide">
+        <label class="field field--wide" data-editor-option="name">
           <span>Name</span>
           <input id="name-input" type="text" maxlength="40" autocomplete="off" placeholder="Character name">
         </label>
@@ -49,18 +49,23 @@
           <select id="template-select"></select>
         </label>
 
-        <label class="field">
+        <label class="field field--wide" data-editor-option="ability">
+          <span>Ability</span>
+          <textarea id="ability-input" rows="5" maxlength="1000" placeholder="Enter ability text"></textarea>
+        </label>
+
+        <label class="field" data-editor-option="range">
           <span>Range</span>
           <input id="range-input" type="number" min="0" max="99" value="6">
         </label>
 
-        <label class="field">
+        <label class="field" data-editor-option="bolts">
           <span>Bolts</span>
           <input id="bolts-input" type="number" min="0" max="6" value="1">
         </label>
       </div>
 
-      <fieldset class="fieldset">
+      <fieldset class="fieldset" data-editor-option="artwork">
         <legend>Artwork</legend>
         <div class="artwork-controls">
           <label class="button button--primary file-button" for="artwork-input">Upload artwork</label>
@@ -80,15 +85,15 @@
         <p class="help-text">Drag directly on the preview to reposition the artwork.</p>
       </fieldset>
 
-      <fieldset class="fieldset">
+      <fieldset class="fieldset" data-editor-option="stats">
         <legend>Stats</legend>
         <div id="stat-controls" class="stat-controls"></div>
       </fieldset>
-	  <fieldset class="fieldset">
+	  <fieldset class="fieldset" data-editor-option-group>
 		  <legend>Additional options</legend>
 
 		  <div class="additional-symbol-controls">
-			<label class="special-option">
+			<label class="special-option" data-editor-option="special">
 			  <input id="special-input" type="checkbox">
 
 			  <span>Special</span>
@@ -100,7 +105,7 @@
 			  >
 			</label>
 
-			<label class="field">
+			<label class="field" data-editor-option="teamAbility">
 			  <span>Team ability</span>
 			  <select id="team-ability-select"></select>
 			</label>
@@ -149,26 +154,54 @@
           </div>
         </div>
         <div class="option-stack">
-          <label class="radio-card">
-            <input type="radio" name="print-mode" value="max" checked>
-            <span><strong>Max tokens per page</strong><small>30 with cutting gaps; 35 when tightly packed.</small></span>
-          </label>
-          <label class="radio-card">
-            <input type="radio" name="print-mode" value="avery8293">
-            <span><strong>Avery 8293</strong><small>Exact 4 × 5 positions for 1.5-inch round labels.</small></span>
-          </label>
-          <label class="check-row">
-            <input id="bleed-input" type="checkbox">
-            <span>Include ¼-inch bleed and show cut line</span>
-          </label>
-          <label id="tight-pack-row" class="check-row">
-            <input id="tight-pack-input" type="checkbox">
-            <span>Pack without cutting gaps (35 per page)</span>
-          </label>
-        </div>
-        <p id="page-summary" class="help-text">30 tokens per page.</p>
+		  <label class="option-card">
+			<input type="radio" name="print-mode" value="max" checked>
+
+			<span class="option-copy">
+			  <strong>Max tokens per page</strong>
+			  <small>20 with bleed enabled, 30 with cutting gaps, 35 when tightly packed.</small>
+			</span>
+		  </label>
+
+		  <label class="option-card">
+			<input type="radio" name="print-mode" value="avery8293">
+
+			<span class="option-copy">
+			  <strong>Avery 8293</strong>
+			  <small>Laid out for Avery 8293 1.5-inch round labels.</small>
+			</span>
+		  </label>
+
+		  <label class="option-card">
+			<input id="double-sided-input" type="checkbox" checked>
+
+			<span class="option-copy">
+			  <strong>Print double-sided</strong>
+			  <small>Unchecking this box will ignore the back side of all tokens.</small>
+			</span>
+		  </label>
+
+		  <label class="option-card">
+			<input id="bleed-input" type="checkbox">
+
+			<span class="option-copy">
+			  <strong>Include ¼-inch bleed</strong>
+			  <small>Extends size to allow for a bleed margin, recommended for printing on Avery labels.</small>
+			</span>
+		  </label>
+
+		  <label id="tight-pack-row" class="option-card">
+			<input id="tight-pack-input" type="checkbox">
+
+			<span class="option-copy">
+			  <strong>Pack without cutting gaps</strong>
+			  <small>Fits 35 tokens on each page.</small>
+			</span>
+		  </label>
+		</div>
+        <p id="page-summary" class="help-text">Current settings fit 30 tokens per page.</p>
         <button id="export-pdf-button" class="button button--primary button--wide" type="button">Export PDF</button>
-        <p class="print-note">The PDF alternates front and mirrored-back pages for duplex printing. Print at Actual Size or 100%, flip on the long edge, and do not use Fit, Shrink, or Scale to Page.</p>
+        <p class="print-note">Print at Actual Size or 100%. Do not use Fit, Shrink, or Scale to Page. For double-sided tokens, flip on long edge.</p>
       </section>
     </section>
   </main>
