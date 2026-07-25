@@ -76,6 +76,25 @@ export const APP_SETTINGS = {
         teamAbility: true
       }
     },
+	{
+      id: "classic_back",
+      label: "Default - Back",
+      image: "assets/templates/classic-token-back.png",
+      bleedImage: "assets/templates/classic-token-back-bleed.png",
+      shape: "circle",
+
+      editor: {
+        name: true,
+        ability: true,
+        range: false,
+        bolts: false,
+        artwork: false,
+        stats: false,
+        improvedAbilities: false,
+        special: true,
+        teamAbility: true
+      }
+    },
     {
       id: "art-only",
       label: "Art Only",

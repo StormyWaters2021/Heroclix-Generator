@@ -97,6 +97,125 @@ export const TOKEN_LAYOUTS = {
       }
     },
   },
+  classic_back: {
+    shape: "circle",
+    artwork: {
+      centerX: -1000,
+      centerY: -1000,
+      clipCenterX: 627,
+      clipCenterY: 627,
+      clipInset: 17,
+      defaultScale: 1
+    },
+	
+	special: {
+	  x: 627,
+	  y: 265,
+	  width: 85,
+	  height: 85,
+	  rotation: 0
+	},
+	
+    name: {
+      x: 627,
+      y: 200,
+      maxWidth: 735,
+      fontRole: "name",
+      align: "center",
+      baseline: "middle",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 10
+    },
+
+	teamAbility: {
+	  x: 627,
+	  y: 100,
+	  width: 75,
+	  height: 75,
+	  rotation: 0
+	},
+
+	textAreas: {
+      ability: {
+        source: "ability",
+        x: 627,
+        y: 700,
+        width: 900,
+        height: 750,
+        fontRole: "ability",
+        align: "center",
+        verticalAlign: "top",
+        lineHeight: 1.15,
+        wrap: true,
+        shrinkToFit: true,
+        fill: "#ffffff",
+        stroke: "#000000",
+        strokeWidth: 8
+      }
+    },
+    range: {
+      x: -1000,
+      y: -1000,
+      fontRole: "range",
+      align: "center",
+      baseline: "middle",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 8,
+      maxWidth: 140
+    },
+    bolts: {
+      startX: -1000,
+      y: -1000,
+      width: 32,
+      height: 48,
+      stepX: 25,
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 5
+    },
+    stats: {
+      speed: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/speed.png", x: -1000, y: -1000 }, specialMarker: { x: 402, y: 522, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } },
+      attack: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/attack.png", x: -1000, y: -1000 }, specialMarker: { x: 440, y: 688, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } },
+      defense: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/defense.png", x: -1000, y: -1000 }, specialMarker: { x: 480, y: 838, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } },
+      damage: { x: -1000, y: -1000, iconX: -1000, iconY: -1000, iconWidth: 95, iconHeight: 95, fillMask: { image: "assets/masks/classic/damage.png", x: -1000, y: -1000 }, specialMarker: { x: 525, y: 993, width: 97, height: 97, stroke: "#000000", lineWidth: 7 } }
+    },
+    statText: {
+      fontRole: "stats",
+      maxWidth: 92,
+      align: "center",
+      baseline: "middle",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 8
+    },
+
+    improvedAbilities: {
+      movement: {
+        slots: [
+          { x: 1175, y: 570, width: 80, height: 80, rotation: 0 },
+          { x: 1160, y: 490, width: 80, height: 80, rotation: 0 },
+          { x: 1140, y: 410, width: 80, height: 80, rotation: 0 },
+          { x: 1120, y: 330, width: 80, height: 80, rotation: 0 },
+          { x: 1040, y: 300, width: 80, height: 80, rotation: 0 },
+          { x: 960, y: 300, width: 80, height: 80, rotation: 0 },
+          { x: 880, y: 300, width: 80, height: 80, rotation: 0 }
+        ]
+      },
+      targeting: {
+        slots: [
+          { x: 1175, y: 685, width: 80, height: 80, rotation: 0 },
+          { x: 1160, y: 765, width: 80, height: 80, rotation: 0 },
+          { x: 1130, y: 845, width: 80, height: 80, rotation: 0 },
+          { x: 1100, y: 925, width: 80, height: 80, rotation: 0 },
+          { x: 1050, y: 995, width: 80, height: 80, rotation: 0 },
+          { x: 980, y: 1050, width: 80, height: 80, rotation: 0 },
+          { x: 895, y: 1060, width: 80, height: 80, rotation: 0 }
+        ]
+      }
+    },
+  },
   "art-only": {
     shape: "circle",
     artwork: {
