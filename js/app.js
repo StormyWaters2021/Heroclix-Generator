@@ -2,7 +2,8 @@ import { APP_SETTINGS } from "../settings/app-settings.js";
 import { PRINT_SETTINGS } from "../settings/print-layouts.js";
 import {
   STAT_DEFINITIONS,
-  TEAM_ABILITY_OPTIONS
+  TEAM_ABILITY_OPTIONS,
+  IMPROVED_ABILITY_GROUPS
 } from "../settings/icon-options.js";
 import { getAbilityOptions } from "../settings/ability-colors.js";
 import {
@@ -36,6 +37,7 @@ const elements = {
   rotationOutput: document.querySelector("#rotation-output"),
   statControls: document.querySelector("#stat-controls"),
   statTemplate: document.querySelector("#stat-row-template"),
+  improvedAbilityControls: document.querySelector("#improved-ability-controls"),
   addToQueue: document.querySelector("#add-to-queue-button"),
   exportPng: document.querySelector("#export-png-button"),
   resetArtwork: document.querySelector("#reset-artwork-button"),
@@ -168,6 +170,51 @@ function populateTeamAbilities() {
   }
 }
 
+
+function populateImprovedAbilityControls() {
+  elements.improvedAbilityControls.replaceChildren();
+
+  for (const [groupId, group] of Object.entries(IMPROVED_ABILITY_GROUPS)) {
+    const section = document.createElement("section");
+    section.className = "improved-ability-group";
+    section.dataset.improvedAbilityGroup = groupId;
+
+    const heading = document.createElement("h3");
+    heading.textContent = group.label;
+
+    const options = document.createElement("div");
+    options.className = "improved-ability-options";
+
+    for (const ability of group.options) {
+      const label = document.createElement("label");
+      label.className = "improved-ability-option";
+
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = ability.id;
+      input.dataset.improvedAbilityId = ability.id;
+      input.addEventListener("change", () => {
+        const checkedIds = new Set(
+          [...options.querySelectorAll("input:checked")].map((entry) => entry.value)
+        );
+
+        currentToken().improvedAbilities[groupId] = group.options
+          .filter((entry) => checkedIds.has(entry.id))
+          .map((entry) => entry.id);
+        redraw();
+      });
+
+      const text = document.createElement("span");
+      text.textContent = ability.label;
+      label.append(input, text);
+      options.append(label);
+    }
+
+    section.append(heading, options);
+    elements.improvedAbilityControls.append(section);
+  }
+}
+
 function populateStatControls() {
   elements.statControls.replaceChildren();
 
@@ -249,6 +296,21 @@ function syncFormFromState() {
     row.querySelector(".stat-ability-select").value = token.stats[definition.id].special
       ? "special"
       : token.stats[definition.id].abilityId;
+  }
+
+
+  for (const [groupId, group] of Object.entries(IMPROVED_ABILITY_GROUPS)) {
+    const selectedIds = new Set(token.improvedAbilities?.[groupId] || []);
+    const groupElement = elements.improvedAbilityControls.querySelector(
+      `[data-improved-ability-group="${groupId}"]`
+    );
+
+    for (const ability of group.options) {
+      const input = groupElement?.querySelector(
+        `[data-improved-ability-id="${ability.id}"]`
+      );
+      if (input) input.checked = selectedIds.has(ability.id);
+    }
   }
 
   elements.addToQueue.textContent = state.editingQueueId
@@ -494,11 +556,17 @@ async function loadProjectFile(file) {
 function newProject() {
   const front = state.currentTokens.front;
   const back = state.currentTokens.back;
+  const hasImprovedAbilities = (token) => Object.values(
+    token.improvedAbilities || {}
+  ).some((selections) => Array.isArray(selections) && selections.length > 0);
+
   const hasWork = state.queue.length
     || front.name
     || front.artwork.dataUrl
+    || hasImprovedAbilities(front)
     || back.name
-    || back.artwork.dataUrl;
+    || back.artwork.dataUrl
+    || hasImprovedAbilities(back);
 
   if (hasWork && !confirm("Start a new project? Unsaved changes will be cleared.")) {
     return;
@@ -690,6 +758,7 @@ async function initialize() {
   populateTemplates();
   populateStatControls();
   populateTeamAbilities();
+  populateImprovedAbilityControls();
   attachInputListeners();
   attachArtworkDrag();
 

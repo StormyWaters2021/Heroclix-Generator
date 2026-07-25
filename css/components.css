@@ -145,6 +145,15 @@
   font-weight: 850;
 }
 
+.collapsible-section > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.collapsible-section__content {
+  margin-top: 1rem;
+}
+
 .help-text,
 .print-note {
   margin-bottom: 0;
@@ -202,3 +211,45 @@
 .is-hidden {
   display: none !important;
 }
+
+.improved-ability-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.improved-ability-group {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.improved-ability-group h3 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.improved-ability-options {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.improved-ability-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.improved-ability-option input {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .improved-ability-controls {
+    grid-template-columns: 1fr;
+  }
+}
+

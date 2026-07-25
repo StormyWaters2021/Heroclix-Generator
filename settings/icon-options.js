@@ -231,3 +231,38 @@ export const TEAM_ABILITY_OPTIONS = [
     image: "assets/icons/team-abilities/xmen.png"
   }
 ];
+
+export const IMPROVED_ABILITY_GROUPS = {
+  movement: {
+    label: "Movement",
+    main: {
+      id: "movement-main",
+      label: "Improved Movement",
+      image: "assets/icons/improved-abilities/movement.png"
+    },
+    options: [
+      { id: "elevated", label: "Elevated", image: "assets/icons/improved-abilities/elevated.png" },
+      { id: "blocking", label: "Blocking", image: "assets/icons/improved-abilities/blocking.png" },
+      { id: "outdoor-blocking", label: "Outdoor Blocking", image: "assets/icons/improved-abilities/outdoorblocking.png" },
+      { id: "destroy-blocking", label: "Destroy Blocking", image: "assets/icons/improved-abilities/destroyblocking.png" },
+      { id: "characters", label: "Characters", image: "assets/icons/improved-abilities/characters.png" },
+      { id: "move-through", label: "Move Through", image: "assets/icons/improved-abilities/throughadjacent.png" }
+    ]
+  },
+  targeting: {
+    label: "Targeting",
+    main: {
+      id: "targeting-main",
+      label: "Improved Targeting",
+      image: "assets/icons/improved-abilities/targeting.png"
+    },
+    options: [
+      { id: "elevated", label: "Elevated", image: "assets/icons/improved-abilities/elevated.png" },
+      { id: "hindering", label: "Hindering", image: "assets/icons/improved-abilities/hindering.png" },
+      { id: "blocking", label: "Blocking", image: "assets/icons/improved-abilities/blocking.png" },
+      { id: "destroy-blocking", label: "Destroy Blocking", image: "assets/icons/improved-abilities/destroyblocking.png" },
+      { id: "characters", label: "Characters", image: "assets/icons/improved-abilities/characters.png" },
+      { id: "adjacent", label: "Adjacent", image: "assets/icons/improved-abilities/throughadjacent.png" }
+    ]
+  }
+};

@@ -71,6 +71,31 @@ export const TOKEN_LAYOUTS = {
 	  height: 75,
 	  rotation: 0
 	},
+
+    improvedAbilities: {
+      movement: {
+        slots: [
+          { x: 1175, y: 570, width: 80, height: 80, rotation: 0 },
+          { x: 1160, y: 490, width: 80, height: 80, rotation: 0 },
+          { x: 1140, y: 410, width: 80, height: 80, rotation: 0 },
+          { x: 1120, y: 330, width: 80, height: 80, rotation: 0 },
+          { x: 1040, y: 300, width: 80, height: 80, rotation: 0 },
+          { x: 960, y: 300, width: 80, height: 80, rotation: 0 },
+          { x: 880, y: 300, width: 80, height: 80, rotation: 0 }
+        ]
+      },
+      targeting: {
+        slots: [
+          { x: 1175, y: 685, width: 80, height: 80, rotation: 0 },
+          { x: 1160, y: 765, width: 80, height: 80, rotation: 0 },
+          { x: 1130, y: 845, width: 80, height: 80, rotation: 0 },
+          { x: 1100, y: 925, width: 80, height: 80, rotation: 0 },
+          { x: 1050, y: 995, width: 80, height: 80, rotation: 0 },
+          { x: 980, y: 1050, width: 80, height: 80, rotation: 0 },
+          { x: 895, y: 1060, width: 80, height: 80, rotation: 0 }
+        ]
+      }
+    },
   },
   "art-only": {
     shape: "circle",
@@ -162,5 +187,7 @@ export const TOKEN_LAYOUTS = {
 	  height: 75,
 	  rotation: 0
 	},
+
+    improvedAbilities: {},
   },
 };

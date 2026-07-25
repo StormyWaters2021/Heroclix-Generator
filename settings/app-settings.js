@@ -1,17 +1,14 @@
 export const APP_SETTINGS = {
-  projectVersion: 3,
+  projectVersion: 4,
   versionmsg: {
     visible: true,
-    text: "HeroClix Bystander Generator v0.3.0"
+    text: "HeroClix Bystander Generator v0.4.0"
   },
   storageKey: "custom-token-maker-project-v1",
   themeStorageKey: "custom-token-maker-theme",
   canvasSize: 1254,
   tokenDiameterInches: 1.5,
   defaultTemplateId: "classic",
-
-  // Font families are defined once here so a future editor dropdown can select
-  // a font by ID without changing any rendering code.
   defaultFontId: "default",
   fontCatalog: {
     default: {
@@ -28,8 +25,6 @@ export const APP_SETTINGS = {
     }
   },
 
-  // Text roles control size and styling independently of the chosen family.
-  // token.fontSelections can later override the fontId for any role.
   fontRoles: {
     name: {
       fontId: "token-name",
@@ -76,6 +71,7 @@ export const APP_SETTINGS = {
         bolts: true,
         artwork: true,
         stats: true,
+        improvedAbilities: true,
         special: true,
         teamAbility: true
       }
@@ -94,6 +90,7 @@ export const APP_SETTINGS = {
         bolts: false,
         artwork: true,
         stats: false,
+        improvedAbilities: false,
         special: true,
         teamAbility: false
       }

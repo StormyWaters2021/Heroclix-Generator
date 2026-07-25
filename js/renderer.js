@@ -3,7 +3,8 @@ import { TOKEN_LAYOUTS } from "../settings/token-layouts.js";
 import {
   STAT_DEFINITIONS,
   SPECIAL_ICON,
-  TEAM_ABILITY_OPTIONS
+  TEAM_ABILITY_OPTIONS,
+  IMPROVED_ABILITY_GROUPS
 } from "../settings/icon-options.js";
 import { getAbilityColor } from "../settings/ability-colors.js";
 import { loadImage } from "./assets.js";
@@ -257,6 +258,28 @@ async function drawConfiguredIcon(ctx, iconDefinition, position) {
   ctx.restore();
 }
 
+
+async function drawImprovedAbilities(ctx, token, layout) {
+  for (const [groupId, group] of Object.entries(IMPROVED_ABILITY_GROUPS)) {
+    const slots = layout.improvedAbilities?.[groupId]?.slots || [];
+    const selectedIds = new Set(token.improvedAbilities?.[groupId] || []);
+    const selectedAbilities = group.options.filter((ability) =>
+      selectedIds.has(ability.id)
+    );
+
+    if (selectedAbilities.length === 0) continue;
+
+	const displayItems = [
+	  group.main,
+	  ...selectedAbilities
+	];
+
+    for (let index = 0; index < displayItems.length && index < slots.length; index += 1) {
+      await drawConfiguredIcon(ctx, displayItems[index], slots[index]);
+    }
+  }
+}
+
 function createShapePath(ctx, shape, centerX, centerY, width, height = width) {
   ctx.beginPath();
 
@@ -415,6 +438,9 @@ export async function renderToken(
   if (teamAbility?.image) {
     await drawConfiguredIcon(ctx, teamAbility, layout.teamAbility);
   }
+
+
+  await drawImprovedAbilities(ctx, token, layout);
 
   for (const statDefinition of STAT_DEFINITIONS) {
     const stat = token.stats[statDefinition.id];

@@ -12,6 +12,10 @@ export function createDefaultToken() {
     bolts: 1,
     special: false,
     teamAbilityId: "none",
+    improvedAbilities: {
+      movement: [],
+      targeting: []
+    },
     artwork: {
       dataUrl: "",
       x: 0,
@@ -77,6 +81,14 @@ function normalizeToken(token) {
     fontSelections: {
       ...fallback.fontSelections,
       ...(token.fontSelections || {})
+    },
+    improvedAbilities: {
+      movement: Array.isArray(token.improvedAbilities?.movement)
+        ? [...token.improvedAbilities.movement]
+        : [],
+      targeting: Array.isArray(token.improvedAbilities?.targeting)
+        ? [...token.improvedAbilities.targeting]
+        : []
     },
     stats: Object.fromEntries(
       STAT_DEFINITIONS.map((definition) => [
