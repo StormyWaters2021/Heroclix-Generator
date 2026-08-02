@@ -95,6 +95,25 @@ export const APP_SETTINGS = {
         teamAbility: true
       }
     },
+	{
+      id: "classic_blank",
+      label: "Default - Writeable",
+      image: "assets/templates/classic-token-writeable.png",
+      bleedImage: "assets/templates/classic-token-writeable-bleed.png",
+      shape: "circle",
+
+      editor: {
+        name: false,
+        ability: false,
+        range: false,
+        bolts: false,
+        artwork: false,
+        stats: false,
+        improvedAbilities: false,
+        special: false,
+        teamAbility: false
+      }
+    },
     {
       id: "art-only",
       label: "Art Only",
