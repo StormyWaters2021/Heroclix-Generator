@@ -2,7 +2,7 @@ export const APP_SETTINGS = {
   projectVersion: 4,
   versionmsg: {
     visible: true,
-    text: "HeroClix Bystander Generator v0.5.1"
+    text: "HeroClix Bystander Generator v0.5.2"
   },
   storageKey: "custom-token-maker-project-v1",
   themeStorageKey: "custom-token-maker-theme",
